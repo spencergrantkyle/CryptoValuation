@@ -1,0 +1,32 @@
+import requests
+import json
+import pandas as pd
+from datetime import datetime
+
+
+# Get Transaction History
+response = requests.get(
+    "https://api.etherscan.io/api?module=account&action=txlist&address=0x15692C4c4055a454Ab39e83B4Bb8Cd6aBB1A958F&startblock=0&endblock=99999999&page=1&offset=10&sort=asc&apikey=YourApiKeyToken"
+)
+
+j = response.json()
+
+df = pd.DataFrame(j['result'])  
+
+
+dfTransactions = df[['timeStamp','value','from','to','gas','gasPrice']]
+
+dfTransactions = dfTransactions.astype({"value":'int64', "timeStamp":"int64"})
+
+def valueInETH(value):
+    return value/1000000000000000000
+
+def TxDate(timeStamp):
+    x = datetime.utcfromtimestamp(timeStamp).strftime('%Y-%m-%d %H:%M:%S')
+    #x = datetime.fromtimestamp(timeStamp)
+    return x
+
+dfTransactions['value'] = dfTransactions['value'].apply(valueInETH)
+dfTransactions['timeStamp'] = dfTransactions['timeStamp'].apply(TxDate)
+
+print(dfTransactions)
